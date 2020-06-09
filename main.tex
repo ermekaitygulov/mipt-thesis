@@ -92,21 +92,25 @@ $v_{\pi^*}(s_t) = \max_{a\in A}q_{\pi^*}(s_t, a)$
 
 \begin{algorithm}[H]
 \SetAlgoLined
- initialization\;
- \While{While condition}{
-  instructions\;
-  \eIf{condition}{
-   instructions1\;
-   instructions2\;
-   }{
-   instructions3\;
+Initialize $q(s, a)$ with zeros\;
+ \While{current episode < max_episode}{
+  Initialize $s$\;
+  Initialize done=False\;
+  \While{not done}{
+  Choose $a$ for $s$ using $q$ (e.g. $\epsilon$-greedy)\;
+  Act $a$, observe $R, s', done$\;
+  $q(s, a) \leftarrow q(s, a)+\alpha[R+\gamma \max _{a'} q(s', a')-q(s, a)]$\;
+  $s \leftarrow s'$\;
   }
  }
  \caption{Q-обучение}
 \end{algorithm}
 
+На каждом шаге действие выбирается с учетом текущего значения $q$ и стратегии исследования, которая необходима, чтобы не сойтись к суб-оптимальному решению. В большинстве случаев используется $\epsilon$-жадная стратегия: с вероятностью $\epsilon$ выбирается случайное действие, а в остальных случаях $argmax_aq(s,a)$. 
+
 \chapter{DQN}
 
+Большинство задач имеют непрерывное пространство $S$ большой размерности, что делает классический вариант Q-обучения непригодным. Однако современные вычислительные возможности и методы оптимизации позволяют вместо таблицы $q(s,a)$ использовать аппроксиматор $q_\theta$ с обучаемыми параметрами $\theta$. Например в работе \cite{DQN}, где такой подход использовался впервые, в качестве аппроксиматора выступает сверточная нейронная сеть.   
  
 \section{Q-обучение}
 \section{Стабилизация целевой переменной и оптимизация архитектуры нейронной сети}
