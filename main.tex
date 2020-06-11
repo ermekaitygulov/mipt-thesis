@@ -25,7 +25,7 @@
 Цель данной работы применение методов обучения с подкреплением в задаче управления робототехническим манипулятором в симулляторе. В работе представлено окружение \textit{RozumEnv}, реализованы алгоритмы обучения в нем и исследуются методы по работе с <<неидеальными>> демонстрациями, т.к. это может быть использовано для ускорения процесса обучения и уменьшения затрачиваемых ресурсов для моделей, работающих с изображениями в качестве входных данных, с помощью моделей использующих данные доступные в симуляторе. 
 Данный подход может быть применен в задачах по переносу моделей из симулятора в реальность
 
-В качестве базовых алгоритмов использовались асинхронный алгоритм Ape-X DQN и улучшенная версия Ape-X DDPG  \cite{apex}. Рабочая среда была реализована с использованием симулятора CoppeliaSim и пакета PyREP \cite{pyrep}.
+В качестве базовых алгоритмов использовались асинхронный алгоритм Ape-X DQN и улучшенная версия Ape-X DDPG  \cite{apex}. Рабочая среда была реализована с использованием симулятора CoppeliaSim\footnote{https://www.coppeliarobotics.com/} и пакета PyREP\footnote{https://github.com/stepjam/PyRep}.
 
 \mainmatter
 \chapter{Обучение с подкреплением}
@@ -231,7 +231,7 @@ $w_{i}=\left(\frac{1}{N} \cdot \frac{1}{P(i)}\right)^{\beta}$
 $\nabla_{\theta^\mu} J(\mu) =\mathbb{E}_{s \sim P}[\nabla_{\theta^\mu} \mu(s) \nabla_{a} Q^{a}(s, a)|_{a=\mu(s)}]$
 \end{center}
 
-На практике, чтобы обучение было более стабильным, также используются таргет-копии аппроксиматоров. В работе \cite{ddpg}, вместо периодического копирования весов используется усреднение Поляка \cite{polyak}:
+На практике, чтобы обучение было более стабильным, также используются таргет-копии аппроксиматоров. В работе \cite{ddpg}, вместо периодического копирования весов используется усреднение Поляка:
 
 \begin{center}
     $\theta^{\mu^{\prime}} \leftarrow \tau \theta^{\mu}+(1-\tau) \theta^{\mu^{\prime}}$
@@ -391,7 +391,7 @@ $\varepsilon_{j}^{b} =f(\varepsilon_{j})$,
 
 \section{Окружающая среда \textit{RozumEnv}}
 
-Для экспериментов с моделью робототехнического манипулятора Rozum в симуляторе CoppeliaSim была реализована среда \textit{RozumEnv} (рис. \ref{rozum}). Сцена симуляции представляет из себя стол с манипулятором и предметом перед ним. Управление производится с помощью пакета \textit{PyREP} \cite{pyrep}, который в отличии от официального API предлагает более быстрое взаимодействие с языком программирования \textit{Python}. Окружение позволяет комбинировать разные пространства состояний: картинка/(картинка, положение манипулятора)/ (положение манипулятора, положение предмета). В качестве $r$ использовалась функция $tolerance$ из работы \cite{deepmind suite}, зависящей от расстояния манипулятора до предмета, и большой награды за захват предмета:
+Для экспериментов с моделью робототехнического манипулятора Rozum в симуляторе CoppeliaSim была реализована среда \textit{RozumEnv} (рис. \ref{rozum}). Сцена симуляции представляет из себя стол с манипулятором и предметом перед ним. Управление производится с помощью пакета PyREP, который в отличии от официального API предлагает более быстрое взаимодействие с языком программирования \textit{Python}. Окружение позволяет комбинировать разные пространства состояний: картинка/(картинка, положение манипулятора)/ (положение манипулятора, положение предмета). В качестве $r$ использовалась функция $tolerance$ из работы \cite{deepmind suite}, зависящей от расстояния манипулятора до предмета, и большой награды за захват предмета:
 \begin{center}
 $r(distance) = tolerance(distance, margin=0.25)/20 + \mathds{1}(grasped)\cdot 10$
 \end{center}
@@ -438,9 +438,9 @@ $r(distance) = tolerance(distance, margin=0.25)/20 + \mathds{1}(grasped)\cdot 10
 
 \section{Особенности реализации}
 
-При работе с приоритезированными буфером сложность сэмплирования составляет $O(\operatorname{log}N)$, где $N$ - размер буфера, и в целях ускорения сэмплирования использовалась C++ реализация буфера, представленная в пакете \textit{cpprb} \cite{cpprb}.
+При работе с приоритезированными буфером сложность сэмплирования составляет $O(\operatorname{log}N)$, где $N$ - размер буфера, и в целях ускорения сэмплирования использовалась C++ реализация буфера, представленная в пакете \textit{cpprb}\footnote{https://ymd\_h.gitlab.io/cpprb/}.
 
-Для реализации распределнной системы Ape-X \cite{apex} был использован пакет \textit{ray} \cite{ray}. Авторы \cite{apex} при реализации алгоритма для эффективной передачи данных между под-процессами и между GPU и CPU использовали класс \textit{FIFOQueue} из пакета \textit{tensorflow}. В данной работе использовалась новая версия пакета \textit{tensorflow} и новый интерфейс \textit{tensorflow.data}. Для эффективной передачи данных между GPU и CPU использовался метод $prefetch$, который позволяет производить обновления и передачу данных на GPU параллельно. Частота обновлений составляла $\sim85$ итераций в секунду при объеме выборки 256 сэмплов.
+Для реализации распределнной системы Ape-X \cite{apex} был использован пакет \textit{ray}\footnote{https://docs.ray.io/en/latest/} . Авторы \cite{apex} при реализации алгоритма для эффективной передачи данных между под-процессами и между GPU и CPU использовали класс \textit{FIFOQueue} из пакета \textit{tensorflow}\footnote{https://www.tensorflow.org/}. В данной работе использовалась новая версия пакета \textit{tensorflow} и новый интерфейс \textit{tensorflow.data}. Для эффективной передачи данных между GPU и CPU использовался метод $prefetch$, который позволяет производить обновления и передачу данных на GPU параллельно. Частота обновлений составляла $\sim85$ итераций в секунду при объеме выборки 256 сэмплов.
 
 \backmatter
 
@@ -456,51 +456,43 @@ $r(distance) = tolerance(distance, margin=0.25)/20 + \mathds{1}(grasped)\cdot 10
 % Следующие строки необходимо раскомментировать, а предыдущую закомментировать, если используется inline-библиография.
 \begin{thebibliography}{99}
     \bibitem{dqn}
-        H. Mott-Smith, I. Langmuir. ``The theory of collectors in gaseous discharges''. \emph{Phys. Rev.} \textbf{28} (1926)
+        Mnih V. et al., Humanlevel control through deep reinforcement learning. Nature, 2015.
+518(7540):529–533.
     \bibitem{ddpg}
-        H. Mott-Smith, I. Langmuir. ``The theory of collectors in gaseous discharges''. \emph{Phys. Rev.} \textbf{28} (1926)
-    \bibitem{Agent-57}
-    \bibitem{OpenAI}
-    \bibitem{DeepMind}
-    \bibitem{vrep}
-    \bibitem{apex}
-    \bibitem{td3}
-    \bibitem{Q-learning}
-    \bibitem{double dqn}
-    \bibitem{dueling dqn}
-    \bibitem{per}
-    \bibitem{n-step}
-    \bibitem{polyak}
-    \bibitem{dqfd}
-    \bibitem{noisy layers}
-    \bibitem{adaptive noise}
-    \bibitem{pofd}
-    \bibitem{deepmind suite}
-    \bibitem{pyrep}
-    \bibitem{gail}
-    \bibitem{aytar} https://arxiv.org/pdf/1910.09470.pdf
-    \bibitem{cpprb}
-    \bibitem{ray}
-    \bibitem{survey} https://arxiv.org/pdf/1309.2660.pdf
-    \bibitem{levine} https://arxiv.org/pdf/1603.02199.pdf
-    \bibitem{abbel} https://arxiv.org/pdf/1703.06907.pdf
-    \bibitem{james1}
-    https://arxiv.org/pdf/1703.06907.pdf
-    \bibitem{james2}
-    https://arxiv.org/abs/1806.07851.pdf
-    \bibitem{jamesgann}
-    https://arxiv.org/pdf/1812.07252.pdf
-    \bibitem{dann}
-    \bibitem{gann}
-    \bibitem{danngann}
-    https://arxiv.org/pdf/1709.07857.pdf
-    \bibitem{0.35}
-    https://arxiv.org/pdf/1802.09564.pdf
-    \bibitem{tcn}
-    \bibitem{assym-ac}
-    https://arxiv.org/pdf/1710.06542.pdf
-    \bibitem{bcfeat} https://arxiv.org/pdf/1902.04706.pdf
-    \bibitem{abbel2}https://arxiv.org/pdf/1709.10089.pdf
+         T. P. Lillicrap et al., Continuous control with deep reinforcement
+learning, arXiv preprint arXiv:1509.02971, 2015
+    \bibitem{Agent-57}Puigdom{\`e}nech Badia, A., and 6 colleagues 2020.\ Agent57: Outperforming the Atari Human Benchmark.\ arXiv e-prints arXiv:2003.13350.
+    \bibitem{OpenAI} OpenAI, and 26 colleagues 2019.\ Dota 2 with Large Scale Deep Reinforcement Learning.\ arXiv e-prints arXiv:1912.06680.
+    \bibitem{DeepMind} Arulkumaran, K., Cully, A., Togelius, J.\ 2019.\ AlphaStar: An Evolutionary Computation Perspective.\ arXiv e-prints arXiv:1902.01724.
+    \bibitem{apex} Horgan, D., and 6 colleagues 2018.\ Distributed Prioritized Experience Replay.\ arXiv e-prints arXiv:1803.00933.
+    \bibitem{td3} Fujimoto, S., van Hoof, H., Meger, D.\ 2018.\ Addressing Function Approximation Error in Actor-Critic Methods.\ arXiv e-prints arXiv:1802.09477.
+    \bibitem{Q-learning} C.J.C.H. Watkins. Learning from delayed rewards. 1989
+    \bibitem{double dqn} van Hasselt, H., Guez, A., Silver, D.\ 2015.\ Deep Reinforcement Learning with Double Q-learning.\ arXiv e-prints arXiv:1509.06461.
+    \bibitem{dueling dqn}  Wang, Z., Schaul, T., Hessel, M., van Hasselt, H., Lanctot, M., de Freitas, N.\ 2015.\ Dueling Network Architectures for Deep Reinforcement Learning.\ arXiv e-prints arXiv:1511.06581.
+    \bibitem{per} Schaul, T., Quan, J., Antonoglou, I., Silver, D.\ 2015.\ Prioritized Experience Replay.\ arXiv e-prints arXiv:1511.05952.
+    \bibitem{n-step} Sutton, R. S. 1988. Learning to predict by the methods of
+temporal differences. Machine learning 3(1):9–44
+    \bibitem{dqfd} Hester, T., and 13 colleagues 2017.\ Deep Q-learning from Demonstrations.\ arXiv e-prints arXiv:1704.03732.
+    \bibitem{noisy layers} Fortunato, M., and 11 colleagues 2017.\ Noisy Networks for Exploration.\ arXiv e-prints arXiv:1706.10295.
+    \bibitem{adaptive noise} Plappert, M., and 8 colleagues 2017.\ Parameter Space Noise for Exploration.\ arXiv e-prints arXiv:1706.01905.
+    \bibitem{pofd} Kang, B., Jie, Z. & Feng, J.. (2018). Policy Optimization with Demonstrations. Proceedings of the 35th International Conference on Machine Learning, in PMLR 80:2469-2478
+    \bibitem{deepmind suite} Tassa, Y., and 11 colleagues 2018.\ DeepMind Control Suite.\ arXiv e-prints arXiv:1801.00690.
+    \bibitem{gail} Ho, J., Ermon, S.\ 2016.\ Generative Adversarial Imitation Learning.\ arXiv e-prints arXiv:1606.03476.
+    \bibitem{aytar} Jeong, R., and 7 colleagues 2019.\ Self-Supervised Sim-to-Real Adaptation for Visual Robotic Manipulation.\ arXiv e-prints arXiv:1910.09470.
+    \bibitem{survey} Bohg, J., Morales, A., Asfour, T., Kragic, D.\ 2013.\ Data-Driven Grasp Synthesis - A Survey.\ arXiv e-prints arXiv:1309.2660.
+    \bibitem{levine} Levine, S., Pastor, P., Krizhevsky, A., Quillen, D.\ 2016.\ Learning Hand-Eye Coordination for Robotic Grasping with Deep Learning and Large-Scale Data Collection.\ arXiv e-prints arXiv:1603.02199.
+    \bibitem{abbel} Tobin, J., Fong, R., Ray, A., Schneider, J., Zaremba, W., Abbeel, P.\ 2017.\ Domain Randomization for Transferring Deep Neural Networks from Simulation to the Real World.\ arXiv e-prints arXiv:1703.06907.
+    \bibitem{james1} James, S., Davison, A.~J., Johns, E.\ 2017.\ Transferring End-to-End Visuomotor Control from Simulation to Real World for a Multi-Stage Task.\ arXiv e-prints arXiv:1707.02267.
+    \bibitem{james2} Matas, J., James, S., Davison, A.~J.\ 2018.\ Sim-to-Real Reinforcement Learning for Deformable Object Manipulation.\ arXiv e-prints arXiv:1806.07851.
+    \bibitem{jamesgann} James, S., and 8 colleagues 2018.\ Sim-to-Real via Sim-to-Sim: Data-efficient Robotic Grasping via Randomized-to-Canonical Adaptation Networks.\ arXiv e-prints arXiv:1812.07252.
+    \bibitem{dann} Ganin, Y., and 7 colleagues 2015.\ Domain-Adversarial Training of Neural Networks.\ arXiv e-prints arXiv:1505.07818.
+    \bibitem{gann} Goodfellow, I.~J., and 7 colleagues 2014.\ Generative Adversarial Networks.\ arXiv e-prints arXiv:1406.2661.
+    \bibitem{danngann}Bousmalis, K., and 11 colleagues 2017.\ Using Simulation and Domain Adaptation to Improve Efficiency of Deep Robotic Grasping.\ arXiv e-prints arXiv:1709.07857.
+    \bibitem{0.35} Zhu, Y., and 10 colleagues 2018.\ Reinforcement and Imitation Learning for Diverse Visuomotor Skills.\ arXiv e-prints arXiv:1802.09564.
+    \bibitem{tcn} Sermanet, P., and 6 colleagues 2017.\ Time-Contrastive Networks: Self-Supervised Learning from Video.\ arXiv e-prints arXiv:1704.06888.
+    \bibitem{assym-ac} Pinto, L., Andrychowicz, M., Welinder, P., Zaremba, W., Abbeel, P.\ 2017.\ Asymmetric Actor Critic for Image-Based Robot Learning.\ arXiv e-prints arXiv:1710.06542.
+    \bibitem{bcfeat} Schwab, D., and 9 colleagues 2019.\ Simultaneously Learning Vision and Feature-based Control Policies for Real-world Ball-in-a-Cup.\ arXiv e-prints arXiv:1902.04706.
+    \bibitem{abbel2}Nair, A., McGrew, B., Andrychowicz, M., Zaremba, W., Abbeel, P.\ 2017.\ Overcoming Exploration in Reinforcement Learning with Demonstrations.\ arXiv e-prints arXiv:1709.10089.
     
 \end{thebibliography}
 
